@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYDRARGYRUM OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;800&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --mercury-silver: #e2e2e2;
+            --mercury-dark: #2a2a2a;
+            --mercury-highlight: #ffffff;
+            --accent: #00f0ff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--mercury-silver);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* The Liquid Desktop Background */
+        .desktop {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, #1a1a1a 0%, transparent 70%),
+                radial-gradient(circle at 20% 30%, #0d0d0d 0%, transparent 40%);
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .liquid-blob {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            filter: blur(80px);
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            from { transform: translate(-10%, -10%); }
+            to { transform: translate(20%, 30%); }
+        }
+
+        /* Status Header */
+        header {
+            padding: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 10;
+        }
+
+        .system-meta {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .clock {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            background: linear-gradient(180deg, var(--mercury-highlight) 0%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 0.9;
+        }
+
+        /* Central Mercury Core - Interactive Component */
+        .mercury-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: conic-gradient(from 180deg at 50% 50%, #555 0deg, #fff 90deg, #222 180deg, #fff 270deg, #555 360deg);
+            border-radius: 50%;
+            filter: url(#mercury-filter) drop-shadow(0 0 50px rgba(255,255,255,0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        .mercury-core:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .core-inner {
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #000 100%);
+            border-radius: 50%;
+            mix-blend-mode: multiply;
+        }
+
+        /* OS Windows */
+        .window {
+            position: absolute;
+            background: var(--glass);
+            backdrop-filter: blur(40px) saturate(1.5);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+            animation: windowReveal 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes windowReveal {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .window-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .window-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+
+        .window-content {
+            padding: 30px;
+            min-width: 400px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .data-label { color: rgba(255,255,255,0.3); }
+        .data-value { color: var(--mercury-highlight); }
+
+        .progress-container {
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: var(--mercury-silver);
+            width: 65%;
+            box-shadow: 0 0 10px var(--mercury-highlight);
+        }
+
+        /* Floating Mercury Navigation */
+        nav {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            padding: 15px 30px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            filter: url(#goo);
+        }
+
+        .nav-item {
+            width: 45px;
+            height: 45px;
+            background: var(--mercury-silver);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-10px);
+            background: #fff;
+            box-shadow: 0 15px 30px rgba(255,255,255,0.2);
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            width: 4px;
+            height: 4px;
+            background: var(--mercury-highlight);
+            border-radius: 50%;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .nav-item:hover::after {
+            opacity: 1;
+        }
+
+        /* Custom Cursor */
+        #cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: var(--mercury-highlight);
+            border-radius: 50%;
+            pointer-events: none;
+            mix-blend-mode: difference;
+            z-index: 9999;
+            transition: transform 0.1s;
+        }
+
+        /* SVG Filters for Mercury Effect */
+        svg {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+
+    <div class="desktop">
+        <div class="liquid-blob" style="top: 10%; left: 10%;"></div>
+        <div class="liquid-blob" style="bottom: 10%; right: 10%; width: 800px; height: 800px;"></div>
+    </div>
+
+    <header>
+        <div class="system-meta">
+            Core_ID: HYDR-01<br>
+            Status: Aqueous_Stable<br>
+            Temp: 29.4°C
+        </div>
+        <div class="clock-wrap">
+            <div class="system-meta" style="text-align: right; margin-bottom: 5px;">Primary Timeline</div>
+            <div class="clock" id="clock">12:44</div>
+        </div>
+    </header>
+
+    <div class="mercury-core">
+        <div class="core-inner"></div>
+    </div>
+
+    <div class="window" style="top: 25%; left: 10%;">
+        <div class="window-header">
+            <span class="window-title">System_Monitor.exe</span>
+            <div style="display: flex; gap: 8px;">
+                <div style="width: 8px; height: 8px; border: 1px solid var(--border);"></div>
+                <div style="width: 8px; height: 8px; border: 1px solid var(--border);"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="data-row">
+                <span class="data-label">VISCOSITY_LOAD</span>
+                <span class="data-value">12.4 Pa·s</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">SURFACE_TENSION</span>
+                <span class="data-value">486.5 mN/m</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">LATENCY_FLOW</span>
+                <span class="data-value">0.002ms</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="window" style="bottom: 25%; right: 10%;">
+        <div class="window-header">
+            <span class="window-title">Neural_Relay.sh</span>
+        </div>
+        <div class="window-content" style="font-family: 'JetBrains Mono'; font-size: 11px; opacity: 0.8; line-height: 1.6;">
+            <div style="color: var(--accent)">> Initializing aqueous suspension...</div>
+            <div>> Calibrating mercury interface nodes...</div>
+            <div>> Stability threshold reached: 99.8%</div>
+            <div style="margin-top: 10px; color: #666;">Waiting for synaptic input_</div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-item"></div>
+        <div class="nav-item"></div>
+        <div class="nav-item"></div>
+        <div class="nav-item"></div>
+        <div class="nav-item"></div>
+    </nav>
+
+    <!-- The Secret Sauce: SVG Filters -->
+    <svg>
+        <defs>
+            <!-- Gooey Filter for Nav -->
+            <filter id="goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+                <feBlend in="SourceGraphic" in2="goo" />
+            </filter>
+
+            <!-- Mercury Displacement Filter -->
+            <filter id="mercury-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise">
+                    <animate attributeName="baseFrequency" values="0.01;0.015;0.01" dur="10s" repeatCount="indefinite" />
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="30" />
+            </filter>
+        </defs>
+    </svg>
+
+    <script>
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('mousedown', () => {
+            cursor.style.transform = 'scale(0.7)';
+            cursor.style.background = '#00f0ff';
+        });
+
+        document.addEventListener('mouseup', () => {
+            cursor.style.transform = 'scale(1)';
+            cursor.style.background = '#ffffff';
+        });
+
+        // Clock Logic
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${h}:${m}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Parallax effect on Core
+        const core = document.querySelector('.mercury-core');
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.clientX) / 40;
+            const y = (window.innerHeight / 2 - e.clientY) / 40;
+            core.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+        });
+    </script>
+</body>
+</html>

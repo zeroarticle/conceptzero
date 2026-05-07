@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400&family=JetBrains+Mono:wght@300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian-deep: #020203;
+            --obsidian-surface: #0a0a0c;
+            --vitreous-edge: rgba(255, 255, 255, 0.08);
+            --vitreous-shine: rgba(255, 255, 255, 0.03);
+            --accent-glow: rgba(100, 100, 255, 0.15);
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--obsidian-deep);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-main);
+            color: white;
+        }
+
+        /* Background Textures */
+        .wallpaper {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 50% -20%, #1a1a25 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, #0a0a15 0%, transparent 40%),
+                var(--obsidian-deep);
+        }
+
+        .wallpaper::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+
+        /* Monolith Light Streak */
+        .light-streak {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.05), transparent);
+            transform: translateX(-50%);
+        }
+
+        /* Clock System */
+        .clock-container {
+            text-align: center;
+            animation: reveal 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            z-index: 10;
+        }
+
+        #time {
+            font-size: 8rem;
+            font-weight: 100;
+            letter-spacing: -0.04em;
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        #date {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Vitreous Dock */
+        .dock-wrapper {
+            position: absolute;
+            bottom: 32px;
+            z-index: 100;
+            animation: slide-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .dock {
+            display: flex;
+            padding: 12px;
+            gap: 12px;
+            background: rgba(10, 10, 12, 0.4);
+            backdrop-filter: blur(32px) saturate(150%);
+            -webkit-backdrop-filter: blur(32px) saturate(150%);
+            border-radius: 24px;
+            border: 1px solid var(--vitreous-edge);
+            box-shadow: 
+                0 20px 50px rgba(0,0,0,0.5),
+                inset 0 1px 1px var(--vitreous-shine);
+            position: relative;
+        }
+
+        /* Reflective highlight on dock top */
+        .dock::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+
+        .dock-item {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(145deg, rgba(255,255,255,0.05), transparent);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .dock-item:hover {
+            transform: translateY(-12px) scale(1.15);
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .dock-item svg {
+            width: 24px;
+            height: 24px;
+            fill: rgba(255,255,255,0.8);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* Active Indicator */
+        .dock-item::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .dock-item.active::after {
+            opacity: 0.6;
+            box-shadow: 0 0 8px #fff;
+        }
+
+        /* Top Menu Bar */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: rgba(255,255,255,0.6);
+            z-index: 1000;
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s ease;
+        }
+
+        .status-item:hover {
+            color: #fff;
+        }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: scale(0.98) translateY(10px); filter: blur(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Subtle pulsating glow in corner */
+        .corner-glow {
+            position: fixed;
+            bottom: -10%;
+            right: -10%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="wallpaper"></div>
+    <div class="light-streak"></div>
+    <div class="corner-glow"></div>
+
+    <nav class="status-bar">
+        <div class="status-left">
+            <div class="status-item" style="font-weight: 600; color: #fff;">OS</div>
+            <div class="status-item">System</div>
+            <div class="status-item">View</div>
+            <div class="status-item">Nodes</div>
+        </div>
+        <div class="status-right">
+            <div class="status-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+                <span>72°F</span>
+            </div>
+            <div class="status-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span>4.2 GHz</span>
+            </div>
+            <div class="status-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>
+                <span>98%</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="clock-container">
+        <div id="time">00:00</div>
+        <div id="date">MONDAY, OCTOBER 24</div>
+    </main>
+
+    <div class="dock-wrapper">
+        <div class="dock">
+            <div class="dock-item active">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+            </div>
+            <div class="dock-item">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="dock-item active">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </div>
+            <div class="dock-item">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+            </div>
+            <div class="dock-item">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L3.91 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47.01.59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            document.getElementById('time').textContent = `${hours}:${minutes}`;
+            
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('date').textContent = now.toLocaleDateString('en-US', options).toUpperCase();
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Add subtle mouse tracking for the wallpaper glow
+        const glow = document.querySelector('.corner-glow');
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth) * 20;
+            const y = (e.clientY / window.innerHeight) * 20;
+            glow.style.transform = `translate(${x}px, ${y}px)`;
+        });
+
+        // Dock Item Interaction
+        const items = document.querySelectorAll('.dock-item');
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>

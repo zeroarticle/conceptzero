@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER Concepts Index</title>
+    <style>
+        :root {
+            --bg: #0a0c10;
+            --panel: rgba(18, 24, 34, 0.86);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --text: #f3f5f8;
+            --muted: #9aa7b6;
+            --accent: #7dd3fc;
+            --accent-strong: #38bdf8;
+            --shadow: rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 35%),
+                linear-gradient(160deg, #081018 0%, #0a0c10 45%, #111827 100%);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .shell {
+            width: min(760px, 100%);
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            box-shadow: 0 24px 80px var(--shadow);
+            backdrop-filter: blur(18px);
+            padding: 28px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            letter-spacing: 0.04em;
+        }
+
+        p {
+            margin: 0 0 24px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--muted);
+        }
+
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(125, 211, 252, 0.25);
+            background: rgba(10, 12, 16, 0.9);
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .list {
+            margin-top: 26px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: inherit;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(125, 211, 252, 0.45);
+            background: rgba(125, 211, 252, 0.08);
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .card-path {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .empty {
+            margin-top: 26px;
+            padding: 18px;
+            border-radius: 16px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+        }
+
+        @media (max-width: 640px) {
+            .shell {
+                padding: 22px;
+            }
+
+            .card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <h1>Concept Browser</h1>
+        <p>Choose a concept label, then open any concept page from the list below.</p>
+
+        <label for="label-select">Concept Label</label>
+        <select id="label-select"></select>
+
+        <section id="concept-list" class="list" aria-live="polite"></section>
+        <div id="empty-state" class="empty" hidden>No concept files found for this label.</div>
+    </main>
+
+    <script>
+        const conceptsByLabel = {
+            Aether: ["1.html", "2.html", "3.html", "4.html"]
+        };
+
+        const labelSelect = document.getElementById("label-select");
+        const conceptList = document.getElementById("concept-list");
+        const emptyState = document.getElementById("empty-state");
+
+        function renderList(label) {
+            const files = conceptsByLabel[label] || [];
+            conceptList.innerHTML = "";
+
+            if (!files.length) {
+                emptyState.hidden = false;
+                return;
+            }
+
+            emptyState.hidden = true;
+
+            files.forEach((fileName, index) => {
+                const link = document.createElement("a");
+                link.className = "card";
+                link.href = `${label}/${fileName}`;
+
+                const title = document.createElement("div");
+                title.className = "card-title";
+                title.textContent = `Concept ${index + 1}`;
+
+                const path = document.createElement("div");
+                path.className = "card-path";
+                path.textContent = `${label}/${fileName}`;
+
+                link.append(title, path);
+                conceptList.appendChild(link);
+            });
+        }
+
+        Object.keys(conceptsByLabel).forEach((label) => {
+            const option = document.createElement("option");
+            option.value = label;
+            option.textContent = label;
+            labelSelect.appendChild(option);
+        });
+
+        labelSelect.addEventListener("change", (event) => {
+            renderList(event.target.value);
+        });
+
+        renderList(labelSelect.value);
+    </script>
+</body>
+</html>

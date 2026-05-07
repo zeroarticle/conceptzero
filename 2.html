@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slate OS - Monolithic UI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050506;
+            --slate-base: #0f0f11;
+            --slate-elevated: #161618;
+            --slate-border: #242427;
+            --accent: #ffffff;
+            --accent-muted: #666666;
+            --text-main: #e2e2e4;
+            --text-dim: #88888b;
+            --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: crosshair;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% -20%, #1a1a1c 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 80px 80px, 80px 80px;
+        }
+
+        /* Taskbar - Bottom Orthogonal */
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 48px;
+            background: var(--slate-base);
+            border-top: 1px solid var(--slate-border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+        }
+
+        .taskbar-items {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .task-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+            transition: all 0.2s var(--transition-smooth);
+        }
+
+        .task-icon:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--slate-border);
+        }
+
+        .task-icon.active {
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .system-tray {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        /* The Monolith Window */
+        .window {
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 70%;
+            height: 75%;
+            background: var(--slate-elevated);
+            border: 1px solid var(--slate-border);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 40px 1fr;
+            animation: windowReveal 0.8s var(--transition-smooth);
+            transform-origin: center bottom;
+        }
+
+        @keyframes windowReveal {
+            from { opacity: 0; transform: translateY(40px) scale(0.98); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+
+        .window-header {
+            grid-column: 1 / span 2;
+            background: var(--slate-base);
+            border-bottom: 1px solid var(--slate-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px;
+            -webkit-app-region: drag;
+        }
+
+        .window-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 24px;
+        }
+
+        .control-dot {
+            width: 10px;
+            height: 1px;
+            background: var(--accent-muted);
+            transition: background 0.2s;
+        }
+
+        .control-dot:hover {
+            background: var(--accent);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            border-right: 1px solid var(--slate-border);
+            padding: 32px 0;
+            background: var(--slate-base);
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            font-size: 13px;
+            color: var(--text-dim);
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .nav-item.active {
+            color: var(--accent);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            height: 60%;
+            width: 2px;
+            background: var(--accent);
+        }
+
+        /* Main Content Workspace */
+        .workspace {
+            padding: 48px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: -1px;
+            margin-bottom: 40px;
+            color: var(--accent);
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--slate-border);
+            border: 1px solid var(--slate-border);
+        }
+
+        .grid-cell {
+            background: var(--slate-elevated);
+            padding: 32px;
+            transition: background 0.4s;
+        }
+
+        .grid-cell:hover {
+            background: #1c1c1f;
+        }
+
+        .cell-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .cell-value {
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        /* Ornamental Elements */
+        .decor-line {
+            position: absolute;
+            background: var(--slate-border);
+        }
+
+        .line-v { width: 1px; height: 100px; }
+        .line-h { height: 1px; width: 100px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--slate-border); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-muted); }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--slate-border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            margin-top: 16px;
+        }
+
+        .status-indicator {
+            width: 4px;
+            height: 4px;
+            background: #00ff88;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff88;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Desktop Environment -->
+    <div class="desktop">
+        
+        <!-- Main Monolithic Window -->
+        <div class="window">
+            <header class="window-header">
+                <div class="window-title">System </div>
+                <div class="window-controls">
+                    <div class="control-dot"></div>
+                    <div class="control-dot" style="width: 10px; height: 10px; border: 1px solid var(--accent-muted); background: transparent;"></div>
+                    <div class="control-dot" style="width: 10px; height: 10px; background: var(--accent);"></div>
+                </div>
+            </header>
+
+            <aside class="sidebar">
+                <div class="nav-item active">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                    Dashboard
+                </div>
+                <div class="nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Processes
+                </div>
+                <div class="nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    Network
+                </div>
+                <div class="nav-item" style="margin-top: auto;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Settings
+                </div>
+            </aside>
+
+            <main class="workspace">
+                <div class="decor-line line-h" style="top: 0; left: 0;"></div>
+                <div class="decor-line line-v" style="top: 0; left: 0;"></div>
+                
+                <h1 class="hero-title">Monolith Slate v1.0</h1>
+                
+                <div class="data-grid">
+                    <div class="grid-cell">
+                        <span class="cell-label">System Load</span>
+                        <div class="cell-value">12.4%</div>
+                        <div class="status-pill">
+                            <div class="status-indicator"></div>
+                            STABLE_OPS
+                        </div>
+                    </div>
+                    <div class="grid-cell">
+                        <span class="cell-label">Memory Usage</span>
+                        <div class="cell-value">4.8 / 64 GB</div>
+                    </div>
+                    <div class="grid-cell">
+                        <span class="cell-label">Active Uplink</span>
+                        <div class="cell-value">941 Mb/s</div>
+                    </div>
+                    <div class="grid-cell">
+                        <span class="cell-label">Storage Array</span>
+                        <div class="cell-value">2.4 TB Free</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; border-left: 1px solid var(--slate-border); padding-left: 20px;">
+                    <span class="cell-label" style="margin-bottom: 20px;">Kernel Logs</span>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.8; color: var(--text-dim);">
+                        [0.000000] Slate Hypervisor Initialization...<br>
+                        [0.482910] Orthogonal Geometry Loaded.<br>
+                        [1.029311] Visual Buffer Synchronized @ 144Hz.<br>
+                        <span style="color: var(--accent)">[1.442001] User Session established.</span>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Taskbar -->
+        <footer class="taskbar">
+            <div class="taskbar-items">
+                <div class="task-icon" style="margin-right: 12px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </div>
+                <div class="task-icon active">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                </div>
+                <div class="task-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div class="task-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                </div>
+            </div>
+            <div class="system-tray">
+                <span id="os-clock">00:00:00</span>
+                <span>ENG</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const time = now.getHours().toString().padStart(2, '0') + ':' + 
+                         now.getMinutes().toString().padStart(2, '0') + ':' + 
+                         now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('os-clock').textContent = time;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Subtle parallax effect on mouse move
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.005;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.005;
+            document.querySelector('.window').style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+    </script>
+</body>
+</html>
